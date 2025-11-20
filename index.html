@@ -395,14 +395,14 @@
     renderer.setDirections(result);
     directionsRenderers.push(renderer);
 
-    // Marcador en el origen del camión con etiqueta C1, C2, C3
+    // 👇 ORIGEN DEL CAMIÓN
     const startLocation = result.routes[0].legs[0].start_location;
     const marker = new google.maps.Marker({
       position: startLocation,
       map: map,
       title: `${camion.nombre} – origen`,
       label: {
-        text: "C" + camion.id,
+        text: "C" + camion.id,   // C1, C2, C3
         color: "#ffffff",
         fontWeight: "bold"
       },
@@ -426,6 +426,7 @@
     console.warn("No se pudo calcular la ruta para", camion.nombre, status);
   }
 });
+
 
       });
     }
