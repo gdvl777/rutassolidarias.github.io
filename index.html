@@ -255,10 +255,15 @@
       const maxAcceso   = Math.max(...comunidades.map(c => c.accesoHoras));
 
       comunidades.forEach(c => {
-        const personasNorm   = c.personas / maxPersonas;
-        const afectacionNorm = c.nivelAfectacion / 5;
-        const accesoNorm     = c.accesoHoras / maxAcceso;
-        const necesidadNorm  = c.necesidadVital / 3;
+        // calcular nivel automáticamente
+        c.nivelAfectacion = nivelAfectacionPorPersonas(c.personas);
+        const maxPersonas = Math.max(...comunidades.map(x => x.personas));
+  const maxAcceso   = Math.max(...comunidades.map(x => x.accesoHoras));
+
+  const personasNorm   = c.personas / maxPersonas;
+  const afectacionNorm = c.nivelAfectacion / 5;
+  const accesoNorm     = c.accesoHoras / maxAcceso;
+  const necesidadNorm  = c.necesidadVital / 3;
 
         const score =
           0.35 * afectacionNorm +
