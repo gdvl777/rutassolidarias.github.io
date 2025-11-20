@@ -327,25 +327,29 @@
       renderTabla();
 
       const camiones = [
-        {
-          nombre: "Camión 1",
-          origen: "Manta, Manabí, Ecuador",
-          color: "#d72638",
-          destinos: []
-        },
-        {
-          nombre: "Camión 2",
-          origen: "Portoviejo, Manabí, Ecuador",
-          color: "#2a9d8f",
-          destinos: []
-        },
-        {
-          nombre: "Camión 3",
-          origen: "Pedernales, Manabí, Ecuador",
-          color: "#f4a261",
-          destinos: []
-        }
-      ];
+  {
+    id: 1,
+    nombre: "Camión 1",
+    origen: "Manta, Manabí, Ecuador",
+    color: "#d72638",
+    destinos: []
+  },
+  {
+    id: 2,
+    nombre: "Camión 2",
+    origen: "Portoviejo, Manabí, Ecuador",
+    color: "#2a9d8f",
+    destinos: []
+  },
+  {
+    id: 3,
+    nombre: "Camión 3",
+    origen: "Pedernales, Manabí, Ecuador",
+    color: "#f4a261",
+    destinos: []
+  }
+];
+
 
       // Distribución simple por prioridad (round-robin)
       comunidades.forEach((c, idx) => {
