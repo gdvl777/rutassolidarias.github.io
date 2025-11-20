@@ -390,19 +390,42 @@
         });
 
         directionsService.route(request, (result, status) => {
-          if (status === google.maps.DirectionsStatus.OK) {
-            renderer.setDirections(result);
-            directionsRenderers.push(renderer);
+  if (status === google.maps.DirectionsStatus.OK) {
+    renderer.setDirections(result);
+    directionsRenderers.push(renderer);
 
-            const personasCubr = camion.destinos
-              .reduce((acc, c) => acc + c.personas, 0);
+    // Marcador en el origen del camión con etiqueta C1, C2, C3
+    const startLocation = result.routes[0].legs[0].start_location;
+    const marker = new google.maps.Marker({
+      position: startLocation,
+      map: map,
+      title: `${camion.nombre} – origen`,
+      label: {
+        text: "C" + camion.id,
+        color: "#ffffff",
+        fontWeight: "bold"
+      },
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 10,
+        fillColor: camion.color,
+        fillOpacity: 1,
+        strokeColor: "#ffffff",
+        strokeWeight: 2
+      }
+    });
+    camionMarkers.push(marker);
 
-            resumenHTML += `<div><strong>${camion.nombre}</strong>: atiende ${camion.destinos.length} comunidades (~${personasCubr} personas).</div>`;
-            resumenDiv.innerHTML = resumenHTML;
-          } else {
-            console.warn("No se pudo calcular la ruta para", camion.nombre, status);
-          }
-        });
+    const personasCubr = camion.destinos
+      .reduce((acc, c) => acc + c.personas, 0);
+
+    resumenHTML += `<div><strong>${camion.nombre}</strong>: atiende ${camion.destinos.length} comunidades (~${personasCubr} personas).</div>`;
+    resumenDiv.innerHTML = resumenHTML;
+  } else {
+    console.warn("No se pudo calcular la ruta para", camion.nombre, status);
+  }
+});
+
       });
     }
     function nivelAfectacionPorPersonas(personas) {
