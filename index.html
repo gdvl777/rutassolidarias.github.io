@@ -297,6 +297,7 @@
       comunidades.forEach((c, idx) => {
         const idxCamion = idx % camiones.length;
         camiones[idxCamion].destinos.push(c);
+        c.camion = camiones[idxCamion].nombre;
       });
 
       const resumenDiv = document.getElementById("resumen");
