@@ -379,15 +379,16 @@
         };
 
         const renderer = new google.maps.DirectionsRenderer({
-          map: map,
-          suppressMarkers: false,
-          preserveViewport: true,
-          polylineOptions: {
-            strokeColor: camion.color,
-            strokeOpacity: 0.9,
-            strokeWeight: 4
-          }
-        });
+  map: map,
+  suppressMarkers: true,      // 👈 ocultamos A, B, C por defecto
+  preserveViewport: true,
+  polylineOptions: {
+    strokeColor: camion.color,
+    strokeOpacity: 0.9,
+    strokeWeight: 4
+  }
+});
+
 
         directionsService.route(request, (result, status) => {
   if (status === google.maps.DirectionsStatus.OK) {
