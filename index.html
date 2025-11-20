@@ -213,14 +213,21 @@
       comunidades.forEach(c => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${c.nombre}</td>
-          <td>${c.provincia}</td>
-          <td>${c.personas}</td>
-          <td>${c.nivelAfectacion}</td>
-          <td>${c.accesoHoras.toFixed(1)}</td>
-          <td>${c.necesidadVital === 3 ? "Muy alta" : (c.necesidadVital === 2 ? "Media" : "Baja")}</td>
-          <td>${typeof c.score === "number" ? prioridadBadge(c.score) + " " + c.score.toFixed(2) : "-"}</td>
-        `;
+  <td>${c.nombre}</td>
+  <td>${c.provincia}</td>
+  <td>${c.personas}</td>
+  <td>${c.nivelAfectacion}</td>
+  <td>${c.accesoHoras.toFixed(1)}</td>
+  <td>${c.necesidadVital === 3 ? "Muy alta" : (c.necesidadVital === 2 ? "Media" : "Baja")}</td>
+  <td>${
+    c.estadoVia === "afectada"
+      ? '<span class="badge-via-afectada">Vía afectada</span>'
+      : '<span class="badge-via-habilitada">Vía habilitada</span>'
+  }</td>
+  <td>${c.camion ? '<span class="badge-camion">' + c.camion + '</span>' : '-'}</td>
+  <td>${typeof c.score === "number" ? prioridadBadge(c.score) + " " + c.score.toFixed(2) : "-"}</td>
+`;
+
         tbody.appendChild(tr);
       });
     }
