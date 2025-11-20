@@ -115,199 +115,201 @@
   </table>
 
   <script>
-    // --- Datos simulados de comunidades ecuatorianas ---
-    // Google Maps geolocalizará estas comunidades por nombre/dirección.
-    // Comunidades fuertemente afectadas por el terremoto de Manabí 2016
-const comunidades = [
-  {
-    nombre: "Barrio Tarqui - Manta",
-    direccion: "Barrio Tarqui, Manta, Manabí, Ecuador",
-    provincia: "Manabí",
-    personas: 15000,
-    nivelAfectacion: 5,
-    accesoHoras: 0.5,
-    necesidadVital: 3   // 3 = muy alta (agua, alimentos, medicinas)
-  },
-  {
-    nombre: "Centro de Portoviejo",
-    direccion: "Parque Vicente Amador Flor, Portoviejo, Manabí, Ecuador",
-    provincia: "Manabí",
-    personas: 12000,
-    nivelAfectacion: 4,
-    accesoHoras: 0.8,
-    necesidadVital: 3
-  },
-  {
-    nombre: "Pedernales urbano",
-    direccion: "Parque Central de Pedernales, Manabí, Ecuador",
-    provincia: "Manabí",
-    personas: 8000,
-    nivelAfectacion: 5,
-    accesoHoras: 3.5,
-    necesidadVital: 3
-  },
-  {
-    nombre: "Jama",
-    direccion: "Parque Central de Jama, Manabí, Ecuador",
-    provincia: "Manabí",
-    personas: 3000,
-    nivelAfectacion: 4,
-    accesoHoras: 4.0,
-    necesidadVital: 2
-  },
-  {
-    nombre: "Canoa",
-    direccion: "Malecón de Canoa, Manabí, Ecuador",
-    provincia: "Manabí",
-    personas: 2500,
-    nivelAfectacion: 4,
-    accesoHoras: 3.8,
-    necesidadVital: 2
+  // --- Comunidades afectadas por el terremoto de Manabí 2016 ---
+  const comunidades = [
+    {
+      nombre: "Barrio Tarqui - Manta",
+      direccion: "Barrio Tarqui, Manta, Manabí, Ecuador",
+      provincia: "Manabí",
+      personas: 15000,
+      nivelAfectacion: 5,
+      accesoHoras: 0.5,
+      necesidadVital: 3
+    },
+    {
+      nombre: "Centro de Portoviejo",
+      direccion: "Parque Vicente Amador Flor, Portoviejo, Manabí, Ecuador",
+      provincia: "Manabí",
+      personas: 12000,
+      nivelAfectacion: 4,
+      accesoHoras: 0.8,
+      necesidadVital: 3
+    },
+    {
+      nombre: "Pedernales urbano",
+      direccion: "Parque Central de Pedernales, Manabí, Ecuador",
+      provincia: "Manabí",
+      personas: 8000,
+      nivelAfectacion: 5,
+      accesoHoras: 3.5,
+      necesidadVital: 3
+    },
+    {
+      nombre: "Jama",
+      direccion: "Parque Central de Jama, Manabí, Ecuador",
+      provincia: "Manabí",
+      personas: 3000,
+      nivelAfectacion: 4,
+      accesoHoras: 4.0,
+      necesidadVital: 2
+    },
+    {
+      nombre: "Canoa",
+      direccion: "Malecón de Canoa, Manabí, Ecuador",
+      provincia: "Manabí",
+      personas: 2500,
+      nivelAfectacion: 4,
+      accesoHoras: 3.8,
+      necesidadVital: 2
+    }
+  ];
+
+  let map;
+  let directionsService;
+  let directionsRenderers = []; // varios renderers, uno por camión
+
+  function prioridadBadge(score) {
+    if (score >= 0.7) return '<span class="badge prio-alta">Alta</span>';
+    if (score >= 0.45) return '<span class="badge prio-media">Media</span>';
+    return '<span class="badge prio-baja">Baja</span>';
   }
+
+  function renderTabla() {
+    const tbody = document.getElementById("tbody-comunidades");
+    tbody.innerHTML = "";
+    comunidades.forEach(c => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${c.nombre}</td>
+        <td>${c.provincia}</td>
+        <td>${c.personas}</td>
+        <td>${c.nivelAfectacion}</td>
+        <td>${c.accesoHoras.toFixed(1)}</td>
+        <td>${c.necesidadVital === 3 ? "Muy alta" : (c.necesidadVital === 2 ? "Media" : "Baja")}</td>
+        <td>${typeof c.score === "number" ? prioridadBadge(c.score) + " " + c.score.toFixed(2) : "-"}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Inicialización del mapa
+  function initMap() {
+    map = new google.maps.Map(document.getElementById("map"), {
+      center: { lat: -0.6, lng: -80.4 }, // Manabí
+      zoom: 8
+    });
+
+    directionsService = new google.maps.DirectionsService();
+    renderTabla();
+  }
+
+  function limpiarRutas() {
+    directionsRenderers.forEach(r => r.setMap(null));
+    directionsRenderers = [];
+  }
+
+  function calcularPrioridadesYRuta() {
+    limpiarRutas();
+
+    // 1) Índice de prioridad (simulación IA)
+    const maxPersonas = Math.max(...comunidades.map(c => c.personas));
+    const maxAcceso   = Math.max(...comunidades.map(c => c.accesoHoras));
+
+    comunidades.forEach(c => {
+      const personasNorm   = c.personas / maxPersonas;
+      const afectacionNorm = c.nivelAfectacion / 5;
+      const accesoNorm     = c.accesoHoras / maxAcceso;
+      const necesidadNorm  = c.necesidadVital / 3;
+
+      const score =
+        0.35 * afectacionNorm +
+        0.30 * personasNorm +
+        0.25 * necesidadNorm +
+        0.10 * (1 - accesoNorm);
+
+      c.score = score;
+    });
+
+    // 2) Ordenar por prioridad
+    comunidades.sort((a, b) => b.score - a.score);
+    renderTabla();
+
+    // 3) Definir 3 camiones (puedes cambiar los orígenes si quieres)
+    const camiones = [
       {
-        nombre: "Recinto Santa Lucía",
-        direccion: "Santa Lucía, Guayas, Ecuador",
-        provincia: "Guayas",
-        personas: 420,
-        nivelAfectacion: 5,
-        accesoHoras: 3.0,
-        necesidadVital: 3   // 1: baja, 2: media, 3: alta
+        nombre: "Camión 1",
+        origen: "Manta, Manabí, Ecuador",
+        color: "#d72638",
+        destinos: []
       },
       {
-        nombre: "Barrio La Gasca",
-        direccion: "La Gasca, Quito, Ecuador",
-        provincia: "Pichincha",
-        personas: 310,
-        nivelAfectacion: 4,
-        accesoHoras: 0.5,
-        necesidadVital: 3
+        nombre: "Camión 2",
+        origen: "Portoviejo, Manabí, Ecuador",
+        color: "#2a9d8f",
+        destinos: []
       },
       {
-        nombre: "Comunidad Shell",
-        direccion: "Shell, Pastaza, Ecuador",
-        provincia: "Pastaza",
-        personas: 180,
-        nivelAfectacion: 3,
-        accesoHoras: 1.8,
-        necesidadVital: 2
-      },
-      {
-        nombre: "Comunidad Río Verde",
-        direccion: "Rioverde, Esmeraldas, Ecuador",
-        provincia: "Esmeraldas",
-        personas: 260,
-        nivelAfectacion: 4,
-        accesoHoras: 2.5,
-        necesidadVital: 2
+        nombre: "Camión 3",
+        origen: "Pedernales, Manabí, Ecuador",
+        color: "#f4a261",
+        destinos: []
       }
     ];
 
-    let map;
-    let directionsService;
-    let directionsRenderer;
+    // Repartimos comunidades entre los 3 camiones de forma round-robin
+    comunidades.forEach((c, idx) => {
+      const idxCamion = idx % camiones.length;
+      camiones[idxCamion].destinos.push(c);
+    });
 
-    function prioridadBadge(score) {
-      if (score >= 0.7) return '<span class="badge prio-alta">Alta</span>';
-      if (score >= 0.45) return '<span class="badge prio-media">Media</span>';
-      return '<span class="badge prio-baja">Baja</span>';
-    }
+    // 4) Calcular rutas para cada camión
+    const resumenDiv = document.getElementById("resumen");
+    let resumenTexto = "";
 
-    function renderTabla() {
-      const tbody = document.getElementById("tbody-comunidades");
-      tbody.innerHTML = "";
-      comunidades.forEach(c => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${c.nombre}</td>
-          <td>${c.provincia}</td>
-          <td>${c.personas}</td>
-          <td>${c.nivelAfectacion}</td>
-          <td>${c.accesoHoras.toFixed(1)}</td>
-          <td>${c.necesidadVital === 3 ? "Muy alta" : (c.necesidadVital === 2 ? "Media" : "Baja")}</td>
-          <td>${typeof c.score === "number" ? prioridadBadge(c.score) + " " + c.score.toFixed(2) : "-"}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
+    camiones.forEach((camion, index) => {
+      if (camion.destinos.length === 0) return;
 
-    // Inicialización de Google Maps
-    function initMap() {
-      map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: -1.8, lng: -78.6 }, // centro aproximado de Ecuador
-        zoom: 6
-      });
-
-      directionsService = new google.maps.DirectionsService();
-      directionsRenderer = new google.maps.DirectionsRenderer({
-        map: map,
-        suppressMarkers: false
-      });
-
-      renderTabla();
-    }
-
-    // Calcula prioridades y arma una ruta para un camión
-    function calcularPrioridadesYRuta() {
-      // 1) Calcular índice de prioridad (simulación de IA)
-      const maxPersonas = Math.max(...comunidades.map(c => c.personas));
-      const maxAcceso   = Math.max(...comunidades.map(c => c.accesoHoras));
-
-      comunidades.forEach(c => {
-        const personasNorm   = c.personas / maxPersonas;
-        const afectacionNorm = c.nivelAfectacion / 5;
-        const accesoNorm     = c.accesoHoras / maxAcceso;
-        const necesidadNorm  = c.necesidadVital / 3;
-
-        const score =
-          0.35 * afectacionNorm +
-          0.30 * personasNorm +
-          0.25 * necesidadNorm +
-          0.10 * (1 - accesoNorm);
-
-        c.score = score;
-      });
-
-      // 2) Ordenar comunidades por prioridad
-      comunidades.sort((a, b) => b.score - a.score);
-      renderTabla();
-
-      // Tomamos las 3 comunidades de mayor prioridad para la ruta demo
-      const seleccionadas = comunidades.slice(0, 3);
-
-      // 3) Definir origen y paradas (el camión sale de Guayaquil)
-      const origen = "Terminal Terrestre de Guayaquil, Ecuador";
-
-      const destino = seleccionadas[seleccionadas.length - 1].direccion;
-      const waypoints = seleccionadas.slice(0, -1).map(c => ({
+      const destinoFinal = camion.destinos[camion.destinos.length - 1].direccion;
+      const waypoints = camion.destinos.slice(0, -1).map(c => ({
         location: c.direccion,
         stopover: true
       }));
 
       const request = {
-        origin: origen,
-        destination: destino,
+        origin: camion.origen,
+        destination: destinoFinal,
         waypoints: waypoints,
         travelMode: google.maps.TravelMode.DRIVING,
         optimizeWaypoints: true
       };
 
-      // 4) Pedir a Google Maps la ruta
-      directionsService.route(request, (result, status) => {
-        if (status === google.maps.DirectionsStatus.OK) {
-          directionsRenderer.setDirections(result);
-
-          // Resumen simple: cuántas personas cubre el camión
-          const personasCubr = seleccionadas.reduce((acc, c) => acc + c.personas, 0);
-          document.getElementById("resumen").innerHTML =
-            `<strong>Ruta generada para un camión:</strong> ` +
-            `salida desde Guayaquil atendiendo ${seleccionadas.length} comunidades ` +
-            `(~${personasCubr} personas afectadas).`;
-        } else {
-          alert("No se pudo calcular la ruta: " + status);
+      const renderer = new google.maps.DirectionsRenderer({
+        map: map,
+        suppressMarkers: false,
+        preserveViewport: true,
+        polylineOptions: {
+          strokeColor: camion.color,
+          strokeOpacity: 0.9,
+          strokeWeight: 4
         }
       });
-    }
-  </script>
+
+      directionsService.route(request, (result, status) => {
+        if (status === google.maps.DirectionsStatus.OK) {
+          renderer.setDirections(result);
+          directionsRenderers.push(renderer);
+
+          const personasCubr = camion.destinos.reduce((acc, c) => acc + c.personas, 0);
+          resumenTexto += `<div><strong>${camion.nombre}</strong>: atiende ${camion.destinos.length} comunidades (~${personasCubr} personas).</div>`;
+          resumenDiv.innerHTML = resumenTexto;
+        } else {
+          console.warn("No se pudo calcular la ruta para", camion.nombre, status);
+        }
+      });
+    });
+  }
+</script>
+
 
   <!-- IMPORTANTE: reemplaza TU_API_KEY_AQUI por tu API key real de Google Maps -->
   <script async defer
