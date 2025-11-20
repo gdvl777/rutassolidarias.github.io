@@ -277,7 +277,9 @@ const comunidades = [
       const seleccionadas = comunidades.slice(0, 3);
 
       // 3) Definir origen y paradas (el camión sale de Guayaquil)
-      const origen = "Terminal Terrestre de Guayaquil, Ecuador";
+      // Centro de acopio principal en Manta
+      const origen = "Manta, Manabí, Ecuador";
+
 
       const destino = seleccionadas[seleccionadas.length - 1].direccion;
       const waypoints = seleccionadas.slice(0, -1).map(c => ({
