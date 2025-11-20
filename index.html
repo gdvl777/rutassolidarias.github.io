@@ -347,6 +347,14 @@
         });
       });
     }
+    function nivelAfectacionPorPersonas(personas) {
+  if (personas <= 200)   return 1; // muy baja
+  if (personas <= 1000)  return 2; // baja
+  if (personas <= 3000)  return 3; // media
+  if (personas <= 8000)  return 4; // alta
+  return 5;                    // muy alta
+}
+
   </script>
 
   <!-- Cambia TU_API_KEY_AQUI por tu key real -->
