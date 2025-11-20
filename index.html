@@ -243,6 +243,8 @@
     let map;
     let directionsService;
     let directionsRenderers = [];
+    let camionMarkers = [];
+
 
     function prioridadBadge(score) {
       if (score >= 0.7) return '<span class="badge prio-alta">Alta</span>';
@@ -287,9 +289,13 @@
     }
 
     function limpiarRutas() {
-      directionsRenderers.forEach(r => r.setMap(null));
-      directionsRenderers = [];
-    }
+  directionsRenderers.forEach(r => r.setMap(null));
+  directionsRenderers = [];
+
+  camionMarkers.forEach(m => m.setMap(null));
+  camionMarkers = [];
+}
+
 
     function calcularPrioridadesYRutas() {
       limpiarRutas();
