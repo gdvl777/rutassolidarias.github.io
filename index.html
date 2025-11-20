@@ -1,45 +1,31 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Rutas Solidarias IA - Mapa y Ruta</title>
+  <meta charset="UTF-8">
+  <title>Rutas Solidarias IA - Demo</title>
   <style>
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      margin: 0;
-      padding: 0 16px 24px;
+      margin: 20px;
       background: #f4f7fb;
     }
-    header {
-      padding: 16px 0 8px;
-    }
     h1 {
-      margin: 0;
+      margin-bottom: 0;
       color: #0b4f8a;
     }
     small {
       color: #555;
     }
-    #map {
-      width: 100%;
-      height: 420px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-      margin-top: 12px;
-    }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
-      background: #fff;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-      font-size: 13px;
+      margin-top: 16px;
+      background: white;
     }
     th, td {
-      border: 1px solid #e2e8f0;
+      border: 1px solid #ddd;
       padding: 8px;
+      font-size: 13px;
     }
     th {
       background: #e6f0fa;
@@ -48,21 +34,15 @@
     tr:nth-child(even) {
       background: #fafbff;
     }
-    .panel {
-      margin-top: 16px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-    }
     .btn {
-      padding: 10px 18px;
-      border-radius: 6px;
+      margin-top: 16px;
+      padding: 10px 16px;
       border: none;
       background: #0b4f8a;
-      color: #fff;
-      font-weight: 600;
+      color: white;
+      border-radius: 4px;
       cursor: pointer;
+      font-weight: 600;
     }
     .btn:hover {
       background: #0d629f;
@@ -73,33 +53,40 @@
       font-size: 11px;
       color: #fff;
     }
-    .prio-alta  { background: #d72638; }
+    .prio-alta { background: #d72638; }
     .prio-media { background: #f4a261; }
-    .prio-baja  { background: #2a9d8f; }
-    #resumen {
+    .prio-baja { background: #2a9d8f; }
+    #resultado {
+      margin-top: 20px;
+    }
+    .card {
+      background: white;
+      padding: 12px 16px;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      margin-top: 8px;
       font-size: 13px;
-      color: #333;
+    }
+    .card h3 {
+      margin-top: 0;
+      margin-bottom: 6px;
+      font-size: 15px;
+      color: #0b4f8a;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Rutas Solidarias IA</h1>
-    <small>
-      Logística solidaria y ayuda humanitaria en Ecuador – demo con geolocalización y ruta de un camión.
-    </small>
-  </header>
 
-  <div id="map"></div>
+  <h1>Rutas Solidarias IA</h1>
+  <small>Demo con datos simulados – Logística solidaria y ayuda humanitaria en Ecuador</small>
 
-  <div class="panel">
-    <button class="btn" onclick="calcularPrioridadesYRuta()">
-      Calcular prioridades y ruta del camión
-    </button>
-    <div id="resumen"></div>
-  </div>
+  <p>
+    Estas son comunidades afectadas tras un evento de emergencia. 
+    El sistema calcula un <strong>índice de prioridad solidaria</strong> y sugiere
+    un plan de rutas para dos vehículos de ayuda.
+  </p>
 
-  <table>
+  <table id="tabla-comunidades">
     <thead>
       <tr>
         <th>Comunidad</th>
@@ -107,77 +94,30 @@
         <th>Personas afectadas</th>
         <th>Nivel de afectación (1–5)</th>
         <th>Acceso (horas)</th>
-        <th>Necesidad vital</th>
-        <th>Prioridad</th>
+        <th>Necesidad vital (agua/alimentos/medicinas)</th>
+        <th>Índice de prioridad</th>
       </tr>
     </thead>
-    <tbody id="tbody-comunidades"></tbody>
+    <tbody></tbody>
   </table>
 
-  <script>
-    // --- Datos simulados de comunidades ecuatorianas ---
-    // Google Maps geolocalizará estas comunidades por nombre/dirección.
-    // Comunidades fuertemente afectadas por el terremoto de Manabí 2016
-const comunidades = [
-  {
-    nombre: "Barrio Tarqui - Manta",
-    direccion: "Barrio Tarqui, Manta, Manabí, Ecuador",
-    provincia: "Manabí",
-    personas: 15000,
-    nivelAfectacion: 5,
-    accesoHoras: 0.5,
-    necesidadVital: 3   // 3 = muy alta (agua, alimentos, medicinas)
-  },
-  {
-    nombre: "Centro de Portoviejo",
-    direccion: "Parque Vicente Amador Flor, Portoviejo, Manabí, Ecuador",
-    provincia: "Manabí",
-    personas: 12000,
-    nivelAfectacion: 4,
-    accesoHoras: 0.8,
-    necesidadVital: 3
-  },
-  {
-    nombre: "Pedernales urbano",
-    direccion: "Parque Central de Pedernales, Manabí, Ecuador",
-    provincia: "Manabí",
-    personas: 8000,
-    nivelAfectacion: 5,
-    accesoHoras: 3.5,
-    necesidadVital: 3
-  },
-  {
-    nombre: "Jama",
-    direccion: "Parque Central de Jama, Manabí, Ecuador",
-    provincia: "Manabí",
-    personas: 3000,
-    nivelAfectacion: 4,
-    accesoHoras: 4.0,
-    necesidadVital: 2
-  },
-  {
-    nombre: "Canoa",
-    direccion: "Malecón de Canoa, Manabí, Ecuador",
-    provincia: "Manabí",
-    personas: 2500,
-    nivelAfectacion: 4,
-    accesoHoras: 3.8,
-    necesidadVital: 2
-  }
-];
+  <button class="btn" onclick="calcularPlan()">Calcular plan de ayuda</button>
 
+  <div id="resultado"></div>
+
+  <script>
+    // Datos simulados de comunidades ecuatorianas afectadas
+    const comunidades = [
       {
         nombre: "Recinto Santa Lucía",
-        direccion: "Santa Lucía, Guayas, Ecuador",
-        provincia: "Guayas",
+        provincia: "Los Ríos",
         personas: 420,
-        nivelAfectacion: 5,
-        accesoHoras: 3.0,
-        necesidadVital: 3   // 1: baja, 2: media, 3: alta
+        nivelAfectacion: 5,     // 1-5
+        accesoHoras: 3.5,       // horas de viaje
+        necesidadVital: 3       // 1: baja, 2: media, 3: alta
       },
       {
         nombre: "Barrio La Gasca",
-        direccion: "La Gasca, Quito, Ecuador",
         provincia: "Pichincha",
         personas: 310,
         nivelAfectacion: 4,
@@ -185,8 +125,15 @@ const comunidades = [
         necesidadVital: 3
       },
       {
-        nombre: "Comunidad Shell",
-        direccion: "Shell, Pastaza, Ecuador",
+        nombre: "Comunidad Río Verde",
+        provincia: "Esmeraldas",
+        personas: 260,
+        nivelAfectacion: 4,
+        accesoHoras: 2.5,
+        necesidadVital: 2
+      },
+      {
+        nombre: "Parroquia Shell",
         provincia: "Pastaza",
         personas: 180,
         nivelAfectacion: 3,
@@ -194,19 +141,14 @@ const comunidades = [
         necesidadVital: 2
       },
       {
-        nombre: "Comunidad Río Verde",
-        direccion: "Rioverde, Esmeraldas, Ecuador",
-        provincia: "Esmeraldas",
-        personas: 260,
-        nivelAfectacion: 4,
-        accesoHoras: 2.5,
-        necesidadVital: 2
+        nombre: "Isla Puná",
+        provincia: "Guayas",
+        personas: 350,
+        nivelAfectacion: 5,
+        accesoHoras: 4.0,   // acceso complejo
+        necesidadVital: 3
       }
     ];
-
-    let map;
-    let directionsService;
-    let directionsRenderer;
 
     function prioridadBadge(score) {
       if (score >= 0.7) return '<span class="badge prio-alta">Alta</span>';
@@ -215,7 +157,7 @@ const comunidades = [
     }
 
     function renderTabla() {
-      const tbody = document.getElementById("tbody-comunidades");
+      const tbody = document.querySelector("#tabla-comunidades tbody");
       tbody.innerHTML = "";
       comunidades.forEach(c => {
         const tr = document.createElement("tr");
@@ -226,96 +168,98 @@ const comunidades = [
           <td>${c.nivelAfectacion}</td>
           <td>${c.accesoHoras.toFixed(1)}</td>
           <td>${c.necesidadVital === 3 ? "Muy alta" : (c.necesidadVital === 2 ? "Media" : "Baja")}</td>
-          <td>${typeof c.score === "number" ? prioridadBadge(c.score) + " " + c.score.toFixed(2) : "-"}</td>
+          <td>${c.score ? prioridadBadge(c.score) + " " + c.score.toFixed(2) : "-"}</td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    // Inicialización de Google Maps
-    function initMap() {
-      map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: -1.8, lng: -78.6 }, // centro aproximado de Ecuador
-        zoom: 6
-      });
-
-      directionsService = new google.maps.DirectionsService();
-      directionsRenderer = new google.maps.DirectionsRenderer({
-        map: map,
-        suppressMarkers: false
-      });
-
-      renderTabla();
-    }
-
-    // Calcula prioridades y arma una ruta para un camión
-    function calcularPrioridadesYRuta() {
+    function calcularPlan() {
       // 1) Calcular índice de prioridad (simulación de IA)
+      // Normalizaciones simples (puedes explicarlo como modelo de ML futuro)
       const maxPersonas = Math.max(...comunidades.map(c => c.personas));
       const maxAcceso   = Math.max(...comunidades.map(c => c.accesoHoras));
 
       comunidades.forEach(c => {
-        const personasNorm   = c.personas / maxPersonas;
-        const afectacionNorm = c.nivelAfectacion / 5;
-        const accesoNorm     = c.accesoHoras / maxAcceso;
-        const necesidadNorm  = c.necesidadVital / 3;
+        const personasNorm = c.personas / maxPersonas;           // 0-1
+        const afectacionNorm = c.nivelAfectacion / 5;            // 0-1
+        const accesoNorm = c.accesoHoras / maxAcceso;            // 0-1
+        const necesidadNorm = c.necesidadVital / 3;              // 0-1
 
+        // Ponderaciones (ejemplo): afectación y necesidad pesan más
         const score =
           0.35 * afectacionNorm +
           0.30 * personasNorm +
           0.25 * necesidadNorm +
-          0.10 * (1 - accesoNorm);
+          0.10 * (1 - accesoNorm);  // mientras más difícil el acceso, sube un poco la prioridad
 
         c.score = score;
       });
 
-      // 2) Ordenar comunidades por prioridad
+      // 2) Ordenar por prioridad (descendente)
       comunidades.sort((a, b) => b.score - a.score);
       renderTabla();
 
-      // Tomamos las 3 comunidades de mayor prioridad para la ruta demo
-      const seleccionadas = comunidades.slice(0, 3);
+      // 3) Asignar a vehículos (greedy simple)
+      const capacidadPorCamion = 500; // kits de ayuda
+      const camiones = [
+        { nombre: "Camión 1", capacidadRestante: capacidadPorCamion, paradas: [] },
+        { nombre: "Camión 2", capacidadRestante: capacidadPorCamion, paradas: [] }
+      ];
 
-      // 3) Definir origen y paradas (el camión sale de Guayaquil)
-      // Centro de acopio principal en Manta
-      const origen = "Manta, Manabí, Ecuador";
+      comunidades.forEach(c => {
+        const kitsNecesarios = Math.ceil(c.personas / 4); // 1 kit por 4 personas aprox.
+        let asignado = false;
 
-
-      const destino = seleccionadas[seleccionadas.length - 1].direccion;
-      const waypoints = seleccionadas.slice(0, -1).map(c => ({
-        location: c.direccion,
-        stopover: true
-      }));
-
-      const request = {
-        origin: origen,
-        destination: destino,
-        waypoints: waypoints,
-        travelMode: google.maps.TravelMode.DRIVING,
-        optimizeWaypoints: true
-      };
-
-      // 4) Pedir a Google Maps la ruta
-      directionsService.route(request, (result, status) => {
-        if (status === google.maps.DirectionsStatus.OK) {
-          directionsRenderer.setDirections(result);
-
-          // Resumen simple: cuántas personas cubre el camión
-          const personasCubr = seleccionadas.reduce((acc, c) => acc + c.personas, 0);
-          document.getElementById("resumen").innerHTML =
-            `<strong>Ruta generada para un camión:</strong> ` +
-            `salida desde Guayaquil atendiendo ${seleccionadas.length} comunidades ` +
-            `(~${personasCubr} personas afectadas).`;
-        } else {
-          alert("No se pudo calcular la ruta: " + status);
+        for (const camion of camiones) {
+          if (camion.capacidadRestante >= kitsNecesarios) {
+            camion.paradas.push({ comunidad: c, kits: kitsNecesarios });
+            camion.capacidadRestante -= kitsNecesarios;
+            asignado = true;
+            break;
+          }
+        }
+        if (!asignado) {
+          // marcar como pendiente
+          c.pendiente = true;
+          c.kitsPendientes = kitsNecesarios;
         }
       });
+
+      // 4) Mostrar resultado
+      const resultadoDiv = document.getElementById("resultado");
+      let html = "";
+
+      camiones.forEach(camion => {
+        html += `<div class="card">
+          <h3>${camion.nombre}</h3>
+          <p><strong>Capacidad usada:</strong> ${(capacidadPorCamion - camion.capacidadRestante)} / ${capacidadPorCamion} kits</p>
+          <ul>`;
+        camion.paradas.forEach(p => {
+          html += `<li>${p.comunidad.nombre} (${p.comunidad.provincia}) – ${p.kits} kits, prioridad ${(p.comunidad.score || 0).toFixed(2)}</li>`;
+        });
+        html += `</ul></div>`;
+      });
+
+      const pendientes = comunidades.filter(c => c.pendiente);
+      if (pendientes.length > 0) {
+        html += `<div class="card">
+          <h3>Comunidades aún sin cubrir</h3>
+          <ul>`;
+        pendientes.forEach(c => {
+          html += `<li>${c.nombre} – requiere ${c.kitsPendientes} kits (prioridad ${(c.score || 0).toFixed(2)})</li>`;
+        });
+        html += `</ul>
+          <p><em>En niveles avanzados, el sistema propondría más vehículos o una segunda ola de rutas.</em></p>
+        </div>`;
+      }
+
+      resultadoDiv.innerHTML = html;
     }
+
+    // Render inicial
+    renderTabla();
   </script>
 
-  <!-- IMPORTANTE: reemplaza TU_API_KEY_AQUI por tu API key real de Google Maps -->
-  <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDBv0_UNjKplm2PhTl8ZTjzT5Lab2ogj7E&callback=initMap">
-  </script>
 </body>
 </html>
